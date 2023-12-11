@@ -38,7 +38,6 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const Text('Flutter'),
       ),
       body: CardSwiper(
-        cardCount: 40,
         results: const [
           "assets/images/card_front_1.png",
           'assets/images/card_front_2.png',
