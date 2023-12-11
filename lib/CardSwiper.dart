@@ -19,7 +19,9 @@ class _CardSwiperState extends State<CardSwiper> {
   final FixedExtentScrollController _controller = FixedExtentScrollController();
   final backCard = const AssetImage('assets/images/card_back.png');
   int indexSelected = -1;
+  int currentIndex = 0;
   String imageResult = '';
+  bool isAnimating = false;
 
   void handleSelectCardPressed() {
     if (imageResult != "") {
@@ -27,7 +29,7 @@ class _CardSwiperState extends State<CardSwiper> {
         indexSelected = -1;
         imageResult = '';
       });
-      _controller.animateToItem(
+      _controller.animateTo(
         0,
         duration: const Duration(milliseconds: 200),
         curve: Curves.linear,
@@ -41,6 +43,34 @@ class _CardSwiperState extends State<CardSwiper> {
     });
     // trigger selected callback
     widget.onPressed(intValue);
+  }
+
+  void _firstScrollListener() {
+    // print("flutter123 current ${_controller.selectedItem}");
+    // int circleCount = (_controller.offset / 1080).floor();
+    // print("flutter123 ${_controller.offset} $circleCount ${_controller.offset - (circleCount * 1080)}");
+
+    if (indexSelected != -1) {
+      if (isAnimating) return;
+      setState(() {
+        indexSelected = -1;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller.addListener(_firstScrollListener);
+  }
+
+  @override
+  void dispose() {
+    _controller
+      ..removeListener(_firstScrollListener)
+      ..dispose();
+    super.dispose();
   }
 
   @override
@@ -64,29 +94,29 @@ class _CardSwiperState extends State<CardSwiper> {
                     squeeze: 1.7,
                     clipBehavior: Clip.none,
                     offAxisFraction: 1.5,
+                    onSelectedItemChanged: (value) {
+                      currentIndex = value;
+                    },
                     diameterRatio: 4.5,
                     renderChildrenOutsideViewport: true,
-                    physics: imageResult == "" ? null : const NeverScrollableScrollPhysics(),
+                    // physics: imageResult == "" ? null : const NeverScrollableScrollPhysics(),
+                    physics:
+                        imageResult == "" ? const FixedExtentScrollPhysics() : const NeverScrollableScrollPhysics(),
                     childDelegate: ListWheelChildLoopingListDelegate(
                       children: List.generate(
                         10,
                         (index) {
                           return _Card(
+                            index: index,
                             key: Key(index.toString()),
                             image: backCard,
                             isActive: indexSelected == index,
                             onPress: () {
-                              double totalWidth = index * 120;
-                              // print("index $index and $totalWidth");
-                              print("indexSelected $indexSelected index $index");
+                              isAnimating = true;
 
-                              // if (indexSelected == 9 && index == 0) {}
-                              //   _controller.animateTo(
-                              //     1200,
-                              //     duration: const Duration(milliseconds: 200),
-                              //     curve: Curves.linear,
-                              //   );
-                              // } else {
+                              _controller.position.restoreOffset(currentIndex * 120);
+                              double totalWidth = index * 120;
+
                               if (indexSelected < index && index - indexSelected > 3) {
                                 if (index == 9) totalWidth = -120;
                                 if (index == 8) totalWidth = -240;
@@ -100,7 +130,7 @@ class _CardSwiperState extends State<CardSwiper> {
                               _controller.animateTo(
                                 totalWidth,
                                 duration: const Duration(milliseconds: 200),
-                                curve: Curves.linear,
+                                curve: Curves.easeInOut,
                               );
 
                               if (indexSelected < index && index - indexSelected > 3) {
@@ -124,6 +154,11 @@ class _CardSwiperState extends State<CardSwiper> {
                               setState(() {
                                 indexSelected = indexSelected == index ? -1 : index;
                               });
+
+                              Future.delayed(const Duration(milliseconds: 300), () {
+                                isAnimating = false;
+                              });
+                              // });
                             },
                           );
                         },
@@ -154,10 +189,12 @@ class _Card extends StatelessWidget {
     required this.onPress,
     required this.isActive,
     required this.image,
+    required this.index,
   });
 
   final Function() onPress;
   final bool isActive;
+  final int index;
   final ImageProvider<Object> image;
 
   @override
@@ -176,9 +213,31 @@ class _Card extends StatelessWidget {
           alignment: Alignment.centerLeft,
           width: 200,
           child: RotatedBox(
-            quarterTurns: 1,
-            child: Image(image: image, width: 200, height: 200),
-          ),
+              quarterTurns: 1,
+              child: Stack(
+                children: [
+                  Image(image: image, width: 200, height: 200),
+                  Positioned(
+                    bottom: 0,
+                    left: 40,
+                    child: RotatedBox(
+                      quarterTurns: 2,
+                      child: Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.all(10),
+                        child: Text(
+                          index.toString(),
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 20.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )),
         ),
       ),
     );
