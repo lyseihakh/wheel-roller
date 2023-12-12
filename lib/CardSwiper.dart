@@ -213,31 +213,9 @@ class _Card extends StatelessWidget {
           alignment: Alignment.centerLeft,
           width: 200,
           child: RotatedBox(
-              quarterTurns: 1,
-              child: Stack(
-                children: [
-                  Image(image: image, width: 200, height: 200),
-                  Positioned(
-                    bottom: 0,
-                    left: 40,
-                    child: RotatedBox(
-                      quarterTurns: 2,
-                      child: Container(
-                        color: Colors.white,
-                        padding: const EdgeInsets.all(10),
-                        child: Text(
-                          index.toString(),
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 20.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              )),
+            quarterTurns: 1,
+            child: Image(image: image, width: 200, height: 200),
+          ),
         ),
       ),
     );
